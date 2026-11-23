@@ -1,12 +1,16 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/server/api-response";
 import { ExternalPlacesApiError } from "@/server/adapters/google-places-adapter";
+import { enforceRateLimit } from "@/server/security/rate-limiter";
 import { findNearbyRestaurants } from "@/server/services/restaurant-service";
 import { nearbyRestaurantsQuerySchema } from "@/server/validators/restaurant";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const limited = enforceRateLimit(request, { scope: "restaurants-nearby" });
+  if (limited) return limited;
+
   try {
     const { searchParams } = new URL(request.url);
     const rawQuery = Object.fromEntries(searchParams.entries());

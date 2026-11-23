@@ -1,12 +1,19 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/server/api-response";
 import { setSessionCookie } from "@/server/auth/session";
+import { enforceRateLimit } from "@/server/security/rate-limiter";
 import { AuthServiceError, loginUser } from "@/server/services/auth-service";
 import { loginRequestSchema } from "@/server/validators/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const limited = enforceRateLimit(request, {
+    scope: "auth-login",
+    maxRequests: 15,
+  });
+  if (limited) return limited;
+
   try {
     let body: unknown;
     try {

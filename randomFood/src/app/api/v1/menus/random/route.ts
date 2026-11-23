@@ -1,12 +1,16 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/server/api-response";
 import { getCurrentSession } from "@/server/auth/session";
+import { enforceRateLimit } from "@/server/security/rate-limiter";
 import { randomizeMenu } from "@/server/services/menu-service";
 import { randomMenuRequestSchema } from "@/server/validators/menu";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const limited = enforceRateLimit(request, { scope: "menus-random" });
+  if (limited) return limited;
+
   try {
     let body: unknown = {};
     const rawText = await request.text();

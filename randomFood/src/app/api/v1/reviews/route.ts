@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/server/api-response";
 import { getCurrentSession } from "@/server/auth/session";
+import { enforceRateLimit } from "@/server/security/rate-limiter";
 import {
   listRestaurantReviews,
   listUserReviews,
@@ -41,6 +42,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = enforceRateLimit(request, {
+    scope: "reviews-write",
+    maxRequests: 20,
+  });
+  if (limited) return limited;
+
   try {
     const session = await getCurrentSession();
     if (!session) {
