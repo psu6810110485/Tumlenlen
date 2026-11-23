@@ -379,19 +379,45 @@ export async function findNearbyRestaurants(
   const shouldQueryAdapter =
     env.effectiveExternalMode === "live" || postgisResult.restaurants.length === 0;
 
-  const adapterResult = shouldQueryAdapter
-    ? await searchPlacesNearby({
+  let adapterResult: {
+    restaurants: RestaurantDTO[];
+    mode: typeof env.effectiveExternalMode;
+    cacheHit: boolean;
+  };
+
+  if (shouldQueryAdapter) {
+    try {
+      adapterResult = await searchPlacesNearby({
         latitude: query.lat,
         longitude: query.lng,
         radiusKm: query.radiusKm,
         menu: resolvedMenu,
         limit: query.limit,
-      })
-    : {
-        restaurants: [] as RestaurantDTO[],
-        mode: env.effectiveExternalMode,
-        cacheHit: false,
-      };
+      });
+    } catch (error) {
+      // If Google Places hits daily quota (429) or transient error, gracefully serve
+      // real PostgreSQL + PostGIS restaurants if available (never substitutes mock data)
+      if (postgisResult.restaurants.length > 0) {
+        console.warn(
+          "[RestaurantService] External Places API failed; serving real PostGIS records:",
+          error instanceof Error ? error.message : error
+        );
+        adapterResult = {
+          restaurants: [],
+          mode: env.effectiveExternalMode,
+          cacheHit: false,
+        };
+      } else {
+        throw error;
+      }
+    }
+  } else {
+    adapterResult = {
+      restaurants: [],
+      mode: env.effectiveExternalMode,
+      cacheHit: false,
+    };
+  }
 
   // 3. Merge deduplicating by googlePlaceId or id
   const seenKeys = new Set<string>();
@@ -418,14 +444,15 @@ export async function findNearbyRestaurants(
 
   // 5. Determine transparent data origin
   let dataOrigin: RestaurantDataOrigin;
-  if (adapterResult.mode === "live") {
+  if (adapterResult.mode === "live" && adapterResult.restaurants.length > 0) {
     dataOrigin =
       postgisResult.restaurants.length > 0
         ? "postgis+google-places"
         : "google-places-live";
+  } else if (postgisResult.restaurants.length > 0) {
+    dataOrigin = "postgis";
   } else {
-    dataOrigin =
-      postgisResult.restaurants.length > 0 ? "postgis" : "mock-dataset";
+    dataOrigin = adapterResult.mode === "live" ? "google-places-live" : "mock-dataset";
   }
 
   return {
