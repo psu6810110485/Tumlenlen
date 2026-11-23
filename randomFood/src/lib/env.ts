@@ -9,6 +9,10 @@ const serverEnvSchema = z.object({
   GOOGLE_PLACES_API_KEY: z.string().optional().default(""),
   AUTH_JWT_SECRET: z.string().optional().default(""),
   AUTH_COOKIE_NAME: z.string().default("fr_session"),
+  GMAIL_USER: z.string().optional().default(""),
+  GMAIL_APP_PASSWORD: z.string().optional().default(""),
+  EMAIL_FROM_NAME: z.string().optional().default("Food Roulette"),
+  NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(60),
   PLACES_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(900),
@@ -29,6 +33,9 @@ export function getServerEnv() {
 
   const data = parsed.data;
   const hasGooglePlacesKey = data.GOOGLE_PLACES_API_KEY.trim().length > 0;
+  const hasGmailSmtpConfig =
+    data.GMAIL_USER.trim().length > 0 &&
+    data.GMAIL_APP_PASSWORD.trim().length > 0;
 
   // Never pretend to run in live mode if Google Places API key is missing
   const effectiveExternalMode: ExternalApiMode =
@@ -37,6 +44,7 @@ export function getServerEnv() {
   return {
     ...data,
     hasGooglePlacesKey,
+    hasGmailSmtpConfig,
     effectiveExternalMode,
   };
 }

@@ -49,11 +49,21 @@ export interface MockHistoryRecord {
   createdAt: string;
 }
 
+export interface MockPasswordResetRecord {
+  id: string;
+  userId: string;
+  tokenHash: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+}
+
 interface MockUserDataStore {
   users: Map<string, MockUserRecord>;
   reviews: Map<string, MockReviewRecord>;
   favorites: Map<string, MockFavoriteRecord>;
   history: MockHistoryRecord[];
+  passwordResetTokens: Map<string, MockPasswordResetRecord>;
 }
 
 const globalForMockUserStore = globalThis as unknown as {
@@ -66,6 +76,7 @@ export const mockUserStore: MockUserDataStore =
     reviews: new Map(),
     favorites: new Map(),
     history: [],
+    passwordResetTokens: new Map(),
   };
 
 if (process.env.NODE_ENV !== "production") {
@@ -77,4 +88,5 @@ export function resetMockUserStore(): void {
   mockUserStore.reviews.clear();
   mockUserStore.favorites.clear();
   mockUserStore.history.length = 0;
+  mockUserStore.passwordResetTokens.clear();
 }
