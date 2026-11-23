@@ -21,6 +21,9 @@ export function Footer() {
             <Link href="/profile" className="hover:text-orange-600">
               โปรไฟล์
             </Link>
+            <Link href="/privacy" className="hover:text-orange-600">
+              นโยบาย PDPA
+            </Link>
             <Link href="/api/v1/health" className="hover:text-orange-600">
               API Health
             </Link>
