@@ -1,21 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { SEED_CATEGORIES, SEED_MENUS } from "../src/server/data/menu-catalog";
 
 const prisma = new PrismaClient();
 
-const INITIAL_CATEGORIES = [
-  { slug: "thai", nameTh: "อาหารไทย", nameEn: "Thai", icon: "🌶️", sortOrder: 1 },
-  { slug: "japanese", nameTh: "อาหารญี่ปุ่น", nameEn: "Japanese", icon: "🍣", sortOrder: 2 },
-  { slug: "korean", nameTh: "อาหารเกาหลี", nameEn: "Korean", icon: "🍲", sortOrder: 3 },
-  { slug: "chinese", nameTh: "อาหารจีน", nameEn: "Chinese", icon: "🥟", sortOrder: 4 },
-  { slug: "italian", nameTh: "อาหารอิตาเลียน", nameEn: "Italian", icon: "🍝", sortOrder: 5 },
-  { slug: "fast-food", nameTh: "ฟาสต์ฟู้ด", nameEn: "Fast Food", icon: "🍔", sortOrder: 6 },
-];
-
 async function main() {
-  console.log("Seeding Phase 1 base categories...");
+  console.log("Seeding categories and Phase 2 menu catalog...");
 
-  for (const category of INITIAL_CATEGORIES) {
-    await prisma.category.upsert({
+  const categoryIdBySlug = new Map<string, string>();
+
+  for (const category of SEED_CATEGORIES) {
+    const record = await prisma.category.upsert({
       where: { slug: category.slug },
       update: {
         nameTh: category.nameTh,
@@ -26,9 +20,52 @@ async function main() {
       },
       create: category,
     });
+    categoryIdBySlug.set(record.slug, record.id);
   }
 
-  console.log(`Seeded ${INITIAL_CATEGORIES.length} categories successfully.`);
+  let menuCount = 0;
+  for (const menu of SEED_MENUS) {
+    const categoryId = categoryIdBySlug.get(menu.categorySlug);
+    if (!categoryId) {
+      throw new Error(`Missing category for slug: ${menu.categorySlug}`);
+    }
+
+    await prisma.menu.upsert({
+      where: { slug: menu.slug },
+      update: {
+        categoryId,
+        nameTh: menu.nameTh,
+        nameEn: menu.nameEn,
+        descriptionTh: menu.descriptionTh,
+        imageUrl: menu.imageUrl,
+        minPrice: menu.minPrice,
+        maxPrice: menu.maxPrice,
+        priceTier: menu.priceTier,
+        mealTypes: menu.mealTypes,
+        searchKeywords: menu.searchKeywords,
+        isActive: true,
+      },
+      create: {
+        categoryId,
+        slug: menu.slug,
+        nameTh: menu.nameTh,
+        nameEn: menu.nameEn,
+        descriptionTh: menu.descriptionTh,
+        imageUrl: menu.imageUrl,
+        minPrice: menu.minPrice,
+        maxPrice: menu.maxPrice,
+        priceTier: menu.priceTier,
+        mealTypes: menu.mealTypes,
+        searchKeywords: menu.searchKeywords,
+        isActive: true,
+      },
+    });
+    menuCount += 1;
+  }
+
+  console.log(
+    `Seeded ${SEED_CATEGORIES.length} categories and ${menuCount} menus successfully.`
+  );
 }
 
 main()
