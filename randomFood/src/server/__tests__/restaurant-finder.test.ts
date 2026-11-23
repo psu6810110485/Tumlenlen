@@ -7,6 +7,7 @@ import {
 import { MemoryTtlCache, placesCache } from "@/server/cache/memory-cache";
 import {
   ExternalPlacesApiError,
+  fetchGooglePlaceDetail,
   searchPlacesNearby,
 } from "@/server/adapters/google-places-adapter";
 import { findNearbyRestaurants } from "@/server/services/restaurant-service";
@@ -194,6 +195,36 @@ describe("Phase 3: Google Places Adapter (Mock vs Live Mode)", () => {
         radiusKm: 5,
       })
     ).rejects.toBeInstanceOf(ExternalPlacesApiError);
+  });
+
+  it("fetches single Google Place detail with proxied storefront photos and consistent Google rating", async () => {
+    process.env.EXTERNAL_API_MODE = "live";
+    process.env.GOOGLE_PLACES_API_KEY = "SUPER_SECRET_SERVER_KEY";
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          id: "ChIJStorefront999",
+          displayName: { text: "ส้มตำนัว สยามสแควร์" },
+          formattedAddress: "ปทุมวัน กรุงเทพมหานคร",
+          location: { latitude: 13.7453, longitude: 100.5338 },
+          rating: 4.4,
+          userRatingCount: 1540,
+          priceLevel: "PRICE_LEVEL_MODERATE",
+          photos: [{ name: "places/ChIJStorefront999/photos/front_01" }],
+          types: ["thai_restaurant"],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const detail = await fetchGooglePlaceDetail("ChIJStorefront999");
+    expect(detail).not.toBeNull();
+    expect(detail?.dataSource).toBe("GOOGLE_PLACES");
+    expect(detail?.googleRating).toBe(4.4);
+    expect(detail?.googleReviewCount).toBe(1540);
+    expect(detail?.photoUrls[0]).toContain("/api/v1/places/photo?name=");
+    expect(detail?.photoUrls[0]).not.toContain("SUPER_SECRET_SERVER_KEY");
   });
 });
 

@@ -1,4 +1,4 @@
-import type { MenuVerificationStatus } from "@prisma/client";
+﻿import type { MenuVerificationStatus } from "@prisma/client";
 
 export interface RealRestaurantMenuSeed {
   menuSlug: string;
@@ -59,9 +59,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:45 – 21:30",
       weekdayText: ["จันทร์–อาทิตย์: 10:45 – 21:30"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "somtum-kai-yang",
@@ -94,9 +92,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "06:00 – 14:00, 15:00 – 22:00",
       weekdayText: ["จันทร์–อาทิตย์: 06:00 – 14:00, 15:00 – 22:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "khao-man-gai",
@@ -123,9 +119,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:00 – 22:00",
       weekdayText: ["จันทร์–อาทิตย์: 10:00 – 22:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "korean-fried-chicken",
@@ -152,9 +146,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "11:00 – 22:00",
       weekdayText: ["จันทร์–อาทิตย์: 11:00 – 22:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "dim-sum-basket",
@@ -181,9 +173,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "17:00 – 24:00",
       weekdayText: ["พุธ–จันทร์: 17:00 – 24:00", "อังคาร: ปิดทำการ"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-thai-kung-sod",
@@ -210,9 +200,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "11:00 – 22:30",
       weekdayText: ["จันทร์–อาทิตย์: 11:00 – 22:30"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "tonkotsu-ramen",
@@ -239,9 +227,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "11:30 – 23:00",
       weekdayText: ["จันทร์–อาทิตย์: 11:30 – 23:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "margherita-pizza",
@@ -274,9 +260,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:00 – 19:00",
       weekdayText: ["จันทร์–อาทิตย์: 10:00 – 19:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-krapow-moo-sub",
@@ -303,9 +287,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "11:00 – 22:00",
       weekdayText: ["จันทร์–อาทิตย์: 11:00 – 22:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "smash-cheeseburger",
@@ -334,9 +316,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "06:00 – 11:30, 17:00 – 21:00",
       weekdayText: ["จันทร์–อาทิตย์: 06:00 – 11:30, 17:00 – 21:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "dim-sum-basket",
@@ -363,9 +343,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:00 – 21:00",
       weekdayText: ["จันทร์–อาทิตย์: 10:00 – 21:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "somtum-kai-yang",
@@ -392,9 +370,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "07:00 – 14:30",
       weekdayText: ["จันทร์–อาทิตย์: 07:00 – 14:30"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "khao-man-gai",
@@ -421,9 +397,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "11:00 – 20:30",
       weekdayText: ["จันทร์–อาทิตย์: 11:00 – 20:30"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-krapow-moo-sub",
@@ -450,9 +424,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "09:00 – 21:00",
       weekdayText: ["จันทร์–อาทิตย์: 09:00 – 21:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1569562211093-4ed0d0758f12?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-krapow-moo-sub",
@@ -481,9 +453,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "07:00 – 21:00",
       weekdayText: ["จันทร์–อาทิตย์: 07:00 – 21:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "somtum-kai-yang",
@@ -510,9 +480,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "08:00 – 16:00",
       weekdayText: ["จันทร์–เสาร์: 08:00 – 16:00", "อาทิตย์: ปิดทำการ"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-krapow-moo-sub",
@@ -541,9 +509,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:00 – 22:00",
       weekdayText: ["จันทร์–อาทิตย์: 10:00 – 22:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-thai-kung-sod",
@@ -572,9 +538,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "10:30 – 22:30",
       weekdayText: ["จันทร์–อาทิตย์: 10:30 – 22:30"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "pad-thai-kung-sod",
@@ -603,9 +567,7 @@ export const REAL_RESTAURANTS_SEED: RealRestaurantSeed[] = [
       todayHours: "09:00 – 20:00",
       weekdayText: ["จันทร์–อาทิตย์: 09:00 – 20:00"],
     },
-    photoUrls: [
-      "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=900&q=80",
-    ],
+    photoUrls: [],
     menus: [
       {
         menuSlug: "somtum-kai-yang",
