@@ -82,12 +82,20 @@ export function LoginForm({ redirectTo = "/profile" }: LoginFormProps) {
       </div>
 
       <div>
-        <label
-          htmlFor="login-password"
-          className="block text-xs font-semibold text-stone-700"
-        >
-          รหัสผ่าน
-        </label>
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="login-password"
+            className="block text-xs font-semibold text-stone-700"
+          >
+            รหัสผ่าน
+          </label>
+          <Link
+            href="/auth/forgot-password"
+            className="text-xs font-semibold text-orange-600 hover:underline"
+          >
+            ลืมรหัสผ่าน?
+          </Link>
+        </div>
         <div className="relative mt-1.5">
           <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <input
