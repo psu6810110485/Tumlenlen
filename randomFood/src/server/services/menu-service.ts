@@ -3,6 +3,7 @@ import type { MealType, Prisma, PriceTier } from "@prisma/client";
 import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { SEED_CATEGORIES, SEED_MENUS } from "@/server/data/menu-catalog";
+import { recordMockRandomHistory } from "@/server/services/history-service";
 import type { ListMenusQuery, RandomMenuRequest } from "@/server/validators/menu";
 
 export type DataOrigin = "database" | "mock-catalog";
@@ -234,7 +235,8 @@ export async function listMenus(query: ListMenusQuery): Promise<{
 }
 
 export async function randomizeMenu(
-  input: RandomMenuRequest
+  input: RandomMenuRequest,
+  options?: { userId?: string | null }
 ): Promise<RandomMenuResult> {
   const excludeSet = new Set(input.excludeMenuIds);
 
@@ -347,6 +349,7 @@ export async function randomizeMenu(
       await prisma.randomHistory
         .create({
           data: {
+            userId: options?.userId ?? null,
             menuId: result.menu.id,
             sessionToken: input.sessionToken ?? null,
             filtersSnapshot: {
@@ -373,7 +376,20 @@ export async function randomizeMenu(
         mealType: input.mealType,
         maxBudget: input.maxBudget,
       });
-      return pickFromPool(fallback, "mock-catalog");
+      const res = pickFromPool(fallback, "mock-catalog");
+      if (res.menu) {
+        recordMockRandomHistory({
+          userId: options?.userId ?? null,
+          sessionToken: input.sessionToken ?? null,
+          menuId: res.menu.id,
+          menuSlug: res.menu.slug,
+          menuNameTh: res.menu.nameTh,
+          categorySlug: res.menu.category.slug,
+          minPrice: res.menu.minPrice,
+          maxPrice: res.menu.maxPrice,
+        });
+      }
+      return res;
     }
     throw error;
   }

@@ -4,6 +4,7 @@ import { calculateDistanceKm } from "@/lib/geo";
 import { prisma } from "@/server/db";
 import { SEED_MENUS } from "@/server/data/menu-catalog";
 import { MOCK_RESTAURANTS } from "@/server/data/mock-restaurants";
+import { getMockReviewsForRestaurant } from "@/server/services/review-service";
 import type {
   RestaurantDeliveryLinkDTO,
   RestaurantDetailDTO,
@@ -260,6 +261,8 @@ export async function getRestaurantDetail(
         null
       : null;
 
+    const mockWebReviews = getMockReviewsForRestaurant(mock.id);
+
     return {
       id: mock.id,
       googlePlaceId: null,
@@ -277,8 +280,11 @@ export async function getRestaurantDetail(
       estimatedMaxPrice: mock.estimatedMaxPrice,
       googleRating: mock.googleRating,
       googleReviewCount: mock.googleReviewCount,
-      appRatingAvg: mock.appRatingAvg,
-      appReviewCount: mock.appReviewCount,
+      appRatingAvg: mockWebReviews.appRatingAvg ?? mock.appRatingAvg,
+      appReviewCount:
+        mockWebReviews.appReviewCount > 0
+          ? mockWebReviews.appReviewCount
+          : mock.appReviewCount,
       openingHours: mock.openingHours,
       photoUrls: mock.photoUrls,
       categories: mock.categories,
@@ -296,7 +302,13 @@ export async function getRestaurantDetail(
         : null,
       matchedMenus,
       // Strictly keep web reviews separate and never fabricate fake user reviews
-      appReviews: [],
+      appReviews: mockWebReviews.reviews.map((rev) => ({
+        id: rev.id,
+        authorName: rev.authorName,
+        rating: rev.rating,
+        comment: rev.comment,
+        createdAt: rev.createdAt,
+      })),
       deliveryLinks: buildDeliveryLinks(mock.name, null, null),
     };
   }
