@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: food-roulette-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: food_roulette
+      POSTGRES_PASSWORD: food_roulette_dev
+      POSTGRES_DB: food_roulette
+    ports:
+      - "5432:5432"
+    volumes:
+      - food_roulette_pgdata:/var/lib/postgresql/data
+      - ./prisma/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U food_roulette -d food_roulette"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  food_roulette_pgdata:
