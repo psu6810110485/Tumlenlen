@@ -28,7 +28,7 @@ export const nearbyRestaurantsQuerySchema = z.object({
   priceTier: restaurantPriceTierSchema.optional().default("ANY"),
   priceLevel: z.coerce.number().int().min(1).max(4).optional(),
   openNow: booleanQuerySchema,
-  verificationFilter: verificationFilterSchema.optional().default("ALL"),
+  verificationFilter: verificationFilterSchema.optional(),
   sortBy: restaurantSortBySchema.optional().default("recommended"),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
