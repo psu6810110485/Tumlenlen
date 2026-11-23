@@ -23,12 +23,12 @@ export interface SeedMenu {
 }
 
 export const SEED_CATEGORIES: SeedCategory[] = [
-  { slug: "thai", nameTh: "อาหารไทย", nameEn: "Thai", icon: "🌶️", sortOrder: 1 },
-  { slug: "japanese", nameTh: "อาหารญี่ปุ่น", nameEn: "Japanese", icon: "🍣", sortOrder: 2 },
-  { slug: "korean", nameTh: "อาหารเกาหลี", nameEn: "Korean", icon: "🍲", sortOrder: 3 },
-  { slug: "chinese", nameTh: "อาหารจีน", nameEn: "Chinese", icon: "🥟", sortOrder: 4 },
-  { slug: "italian", nameTh: "อาหารอิตาเลียน", nameEn: "Italian", icon: "🍝", sortOrder: 5 },
-  { slug: "fast-food", nameTh: "ฟาสต์ฟู้ด", nameEn: "Fast Food", icon: "🍔", sortOrder: 6 },
+  { slug: "thai", nameTh: "อาหารไทย", nameEn: "Thai", icon: "flame", sortOrder: 1 },
+  { slug: "japanese", nameTh: "อาหารญี่ปุ่น", nameEn: "Japanese", icon: "fish", sortOrder: 2 },
+  { slug: "korean", nameTh: "อาหารเกาหลี", nameEn: "Korean", icon: "soup", sortOrder: 3 },
+  { slug: "chinese", nameTh: "อาหารจีน", nameEn: "Chinese", icon: "utensils", sortOrder: 4 },
+  { slug: "italian", nameTh: "อาหารอิตาเลียน", nameEn: "Italian", icon: "pizza", sortOrder: 5 },
+  { slug: "fast-food", nameTh: "ฟาสต์ฟู้ด", nameEn: "Fast Food", icon: "sandwich", sortOrder: 6 },
 ];
 
 export const SEED_MENUS: SeedMenu[] = [

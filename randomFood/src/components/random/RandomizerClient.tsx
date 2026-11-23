@@ -18,6 +18,7 @@ import {
   MEAL_TYPE_OPTIONS,
 } from "@/lib/constants";
 import { cn } from "@/lib/cn";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { EmptyState, ErrorState } from "@/components/ui/StateViews";
 
 interface MenuItem {
@@ -83,12 +84,12 @@ const PRICE_TIER_LABELS: Record<string, string> = {
 };
 
 const FALLBACK_SPIN_ITEMS = [
-  { id: "s1", nameTh: "ข้าวกะเพราหมูสับไข่ดาว", icon: "🌶️" },
-  { id: "s2", nameTh: "ราเมงซุปกระดูกหมู", icon: "🍣" },
-  { id: "s3", nameTh: "ไก่ทอดเกาหลีซอสการ์ลิค", icon: "🍲" },
-  { id: "s4", nameTh: "ติ่มซำ ฮะเก๋า & ขนมจีบ", icon: "🥟" },
-  { id: "s5", nameTh: "สปาเกตตีคาโบนาร่า", icon: "🍝" },
-  { id: "s6", nameTh: "สแมชชีสเบอร์เกอร์", icon: "🍔" },
+  { id: "s1", nameTh: "ข้าวกะเพราหมูสับไข่ดาว", icon: "flame" },
+  { id: "s2", nameTh: "ราเมงซุปกระดูกหมู", icon: "fish" },
+  { id: "s3", nameTh: "ไก่ทอดเกาหลีซอสการ์ลิค", icon: "soup" },
+  { id: "s4", nameTh: "ติ่มซำ ฮะเก๋า & ขนมจีบ", icon: "utensils" },
+  { id: "s5", nameTh: "สปาเกตตีคาโบนาร่า", icon: "pizza" },
+  { id: "s6", nameTh: "สแมชชีสเบอร์เกอร์", icon: "sandwich" },
 ];
 
 export function RandomizerClient({
@@ -344,13 +345,14 @@ export function RandomizerClient({
                       type="button"
                       onClick={() => toggleCategory(cat.slug)}
                       className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                         active
                           ? "border-orange-500 bg-orange-50 text-orange-800"
                           : "border-border-subtle text-stone-600 hover:bg-stone-50"
                       )}
                     >
-                      {cat.icon} {cat.nameTh}
+                      <CategoryIcon slug={cat.slug} className="h-3.5 w-3.5" />
+                      {cat.nameTh}
                     </button>
                   );
                 })}
@@ -429,8 +431,8 @@ export function RandomizerClient({
       <div className="mt-6 overflow-hidden rounded-3xl border border-border-subtle bg-surface shadow-lg shadow-orange-950/5">
         {isSpinning ? (
           <div className="flex min-h-[380px] flex-col items-center justify-center bg-gradient-to-b from-orange-50/80 to-surface p-8 text-center">
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500 to-amber-500 text-5xl shadow-lg shadow-orange-500/25 animate-bounce">
-              <span aria-hidden="true">{spinTicker.icon}</span>
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/25 animate-bounce">
+              <CategoryIcon iconKey={spinTicker.icon} className="h-10 w-10" />
             </div>
             <p className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-orange-600">
               <Sparkles className="h-3.5 w-3.5 animate-spin" />
@@ -504,8 +506,8 @@ export function RandomizerClient({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center text-6xl">
-                  <span>{currentMenu.category.icon}</span>
+                <div className="flex h-full w-full flex-col items-center justify-center text-orange-500">
+                  <CategoryIcon slug={currentMenu.category.slug} className="h-14 w-14" />
                 </div>
               )}
 
@@ -514,7 +516,10 @@ export function RandomizerClient({
               {/* Top Badges */}
               <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-stone-900 shadow-sm backdrop-blur">
-                  <span>{currentMenu.category.icon}</span>
+                  <CategoryIcon
+                    slug={currentMenu.category.slug}
+                    className="h-3.5 w-3.5 text-orange-600"
+                  />
                   {currentMenu.category.nameTh}
                 </span>
                 {dataSource && (
@@ -630,8 +635,8 @@ export function RandomizerClient({
                       : "border-border-subtle bg-surface hover:border-orange-300"
                   )}
                 >
-                  <span className="text-xl" aria-hidden="true">
-                    {item.category.icon}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
+                    <CategoryIcon slug={item.category.slug} className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold text-stone-900">
