@@ -16,6 +16,14 @@ export interface RestaurantMenuMatchDTO {
   matchedPrice: number | null;
 }
 
+export interface RankingBreakdown {
+  totalScore: number; // 0 - 100
+  verificationScore: number; // 0 - 45
+  ratingScore: number; // 0 - 25
+  proximityScore: number; // 0 - 20
+  openNowScore: number; // 0 - 10
+}
+
 export interface RestaurantDTO {
   id: string;
   googlePlaceId: string | null;
@@ -43,6 +51,40 @@ export interface RestaurantDTO {
   isMockData: boolean;
   // Strictly null unless evidence exists (Rule 3)
   menuMatch: RestaurantMenuMatchDTO | null;
+  // Transparent Phase 4 ranking score (0-100)
+  matchScore?: number;
+  rankingBreakdown?: RankingBreakdown;
+}
+
+export interface RestaurantAppReviewDTO {
+  id: string;
+  authorName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface RestaurantDeliveryLinkDTO {
+  provider: "GRABFOOD" | "LINEMAN";
+  label: string;
+  url: string;
+  isVerifiedDirectUrl: boolean;
+}
+
+export interface RestaurantDetailDTO extends Omit<RestaurantDTO, "distanceKm"> {
+  distanceKm: number | null;
+  matchedMenus: Array<{
+    menuId: string;
+    menuSlug: string;
+    menuNameTh: string;
+    menuNameEn: string;
+    categorySlug: string;
+    verificationStatus: MenuVerificationStatus;
+    evidenceSource: string;
+    price: number | null;
+  }>;
+  appReviews: RestaurantAppReviewDTO[];
+  deliveryLinks: RestaurantDeliveryLinkDTO[];
 }
 
 export type RestaurantDataOrigin =

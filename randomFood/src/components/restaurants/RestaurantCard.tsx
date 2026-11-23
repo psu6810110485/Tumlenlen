@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
+  ArrowRight,
   BadgeCheck,
   Clock,
   ExternalLink,
@@ -20,6 +22,7 @@ import type { RestaurantDTO } from "@/server/types/restaurant";
 
 interface RestaurantCardProps {
   restaurant: RestaurantDTO;
+  detailHref?: string;
   isSelected?: boolean;
   onSelectOnMap?: (restaurant: RestaurantDTO) => void;
 }
@@ -31,11 +34,13 @@ function renderPriceLevelSymbols(level: number | null): string {
 
 export function RestaurantCard({
   restaurant,
+  detailHref,
   isSelected = false,
   onSelectOnMap,
 }: RestaurantCardProps) {
   const [imgError, setImgError] = useState(false);
   const photoUrl = restaurant.photoUrls[0] ?? null;
+  const resolvedDetailHref = detailHref || `/restaurants/${encodeURIComponent(restaurant.id)}`;
 
   const mapsUrl = buildGoogleMapsDirectionsUrl(
     restaurant.latitude,
@@ -106,15 +111,30 @@ export function RestaurantCard({
         {/* Details */}
         <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
           <div>
-            {/* Name & Distance */}
+            {/* Name, Match Score & Distance */}
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-base font-bold leading-snug text-stone-900 sm:text-lg">
-                {restaurant.name}
-              </h3>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
-                <Navigation className="h-3 w-3" />
-                {formatDistanceTh(restaurant.distanceKm)}
-              </span>
+              <div className="min-w-0">
+                <Link
+                  href={resolvedDetailHref}
+                  className="text-base font-bold leading-snug text-stone-900 transition-colors hover:text-orange-600 sm:text-lg"
+                >
+                  {restaurant.name}
+                </Link>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {typeof restaurant.matchScore === "number" && (
+                  <span
+                    title="คะแนนการจัดอันดับรวม (ความตรงเมนู + คะแนนรีวิว + ระยะทาง + สถานะเปิด)"
+                    className="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-bold text-stone-700"
+                  >
+                    คะแนน {restaurant.matchScore}/100
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700">
+                  <Navigation className="h-3 w-3" />
+                  {formatDistanceTh(restaurant.distanceKm)}
+                </span>
+              </div>
             </div>
 
             {/* Address */}
@@ -233,11 +253,19 @@ export function RestaurantCard({
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border-subtle bg-surface px-3 py-1.5 text-xs font-semibold text-stone-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
             >
-              นำทาง Google Maps
+              Google Maps
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
+
+            <Link
+              href={resolvedDetailHref}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700"
+            >
+              ดูรายละเอียดร้าน
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
       </div>

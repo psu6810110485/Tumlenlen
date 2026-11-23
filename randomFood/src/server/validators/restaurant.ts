@@ -13,6 +13,10 @@ export const restaurantPriceTierSchema = z
   .enum(["ANY", "BUDGET", "MODERATE", "PREMIUM"])
   .default("ANY");
 
+export const verificationFilterSchema = z
+  .enum(["ALL", "VERIFIED_ONLY", "MATCHED_ONLY"])
+  .default("ALL");
+
 export const nearbyRestaurantsQuerySchema = z.object({
   lat: z.coerce.number().min(-90, "ละติจูดต้องอยู่ระหว่าง -90 ถึง 90").max(90, "ละติจูดต้องอยู่ระหว่าง -90 ถึง 90"),
   lng: z.coerce.number().min(-180, "ลองจิจูดต้องอยู่ระหว่าง -180 ถึง 180").max(180, "ลองจิจูดต้องอยู่ระหว่าง -180 ถึง 180"),
@@ -24,9 +28,11 @@ export const nearbyRestaurantsQuerySchema = z.object({
   priceTier: restaurantPriceTierSchema.optional().default("ANY"),
   priceLevel: z.coerce.number().int().min(1).max(4).optional(),
   openNow: booleanQuerySchema,
+  verificationFilter: verificationFilterSchema.optional(),
   sortBy: restaurantSortBySchema.optional().default("recommended"),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export type NearbyRestaurantsQuery = z.infer<typeof nearbyRestaurantsQuerySchema>;
 export type RestaurantSortBy = z.infer<typeof restaurantSortBySchema>;
+export type VerificationFilter = z.infer<typeof verificationFilterSchema>;

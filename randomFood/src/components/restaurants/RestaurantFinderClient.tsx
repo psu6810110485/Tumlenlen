@@ -83,6 +83,12 @@ const SORT_OPTIONS = [
   { label: "ราคาสูงไปต่ำ", value: "price_desc" },
 ];
 
+const VERIFICATION_FILTERS = [
+  { label: "ทุกร้านในพื้นที่", value: "ALL" },
+  { label: "เฉพาะร้านที่ตรงเมนู", value: "MATCHED_ONLY" },
+  { label: "เฉพาะยืนยันเมนู (VERIFIED)", value: "VERIFIED_ONLY" },
+];
+
 function originLabel(origin: RestaurantDataOrigin | null): string {
   switch (origin) {
     case "postgis+google-places":
@@ -116,6 +122,7 @@ export function RestaurantFinderClient({
   const [minRating, setMinRating] = useState<string>("");
   const [priceTier, setPriceTier] = useState<string>("ANY");
   const [openNow, setOpenNow] = useState<boolean>(false);
+  const [verificationFilter, setVerificationFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("recommended");
 
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
@@ -151,6 +158,9 @@ export function RestaurantFinderClient({
       if (minRating) params.set("minRating", minRating);
       if (priceTier !== "ANY") params.set("priceTier", priceTier);
       if (openNow) params.set("openNow", "true");
+      if (verificationFilter !== "ALL") {
+        params.set("verificationFilter", verificationFilter);
+      }
 
       const res = await fetch(`/api/v1/restaurants/nearby?${params.toString()}`, {
         cache: "no-store",
@@ -193,6 +203,7 @@ export function RestaurantFinderClient({
     priceTier,
     radiusKm,
     sortBy,
+    verificationFilter,
   ]);
 
   useEffect(() => {
@@ -210,8 +221,17 @@ export function RestaurantFinderClient({
     setMinRating("");
     setPriceTier("ANY");
     setOpenNow(false);
+    setVerificationFilter("ALL");
     setSortBy("recommended");
     setRadiusKm(10);
+  }
+
+  function buildDetailHref(restaurantId: string): string {
+    const params = new URLSearchParams();
+    params.set("lat", String(location.latitude));
+    params.set("lng", String(location.longitude));
+    if (menuSlug) params.set("menuSlug", menuSlug);
+    return `/restaurants/${encodeURIComponent(restaurantId)}?${params.toString()}`;
   }
 
   function handleSelectOnMap(restaurant: RestaurantDTO) {
@@ -416,6 +436,22 @@ export function RestaurantFinderClient({
             เปิดอยู่ตอนนี้
           </label>
 
+          {/* Menu Verification Filter (shown when searching for a specific menu) */}
+          {displayMenuName && (
+            <select
+              aria-label="กรองตามสถานะยืนยันเมนู"
+              value={verificationFilter}
+              onChange={(e) => setVerificationFilter(e.target.value)}
+              className="rounded-lg border border-border-subtle bg-surface px-2.5 py-1.5 text-xs font-medium text-stone-700 focus:border-orange-500 focus:outline-none"
+            >
+              {VERIFICATION_FILTERS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          )}
+
           {/* Sort */}
           <div className="ml-auto flex items-center gap-1.5">
             <span className="text-xs text-stone-500">เรียงตาม:</span>
@@ -530,6 +566,7 @@ export function RestaurantFinderClient({
               <RestaurantCard
                 key={restaurant.id}
                 restaurant={restaurant}
+                detailHref={buildDetailHref(restaurant.id)}
                 isSelected={selectedMapRestaurantId === restaurant.id}
                 onSelectOnMap={handleSelectOnMap}
               />

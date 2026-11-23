@@ -15,6 +15,7 @@ import {
   type SelectedLocation,
 } from "@/lib/locations";
 import { LocationPicker } from "@/components/location/LocationPicker";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { cn } from "@/lib/cn";
 
 export function DiscoveryForm() {
@@ -87,8 +88,15 @@ export function DiscoveryForm() {
                     : "border-border-subtle bg-surface text-stone-700 hover:border-orange-300 hover:bg-orange-50/40"
                 )}
               >
-                <span className="text-lg" aria-hidden="true">
-                  {category.icon}
+                <span
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                    active
+                      ? "bg-orange-100 text-orange-700"
+                      : "bg-stone-100 text-stone-600"
+                  )}
+                >
+                  <CategoryIcon slug={category.slug} className="h-4 w-4" />
                 </span>
                 <span className="truncate">{category.nameTh}</span>
               </button>

@@ -6,12 +6,12 @@ export interface FoodCategoryOption {
 }
 
 export const FOOD_CATEGORIES: FoodCategoryOption[] = [
-  { slug: "thai", nameTh: "อาหารไทย", nameEn: "Thai", icon: "🌶️" },
-  { slug: "japanese", nameTh: "อาหารญี่ปุ่น", nameEn: "Japanese", icon: "🍣" },
-  { slug: "korean", nameTh: "อาหารเกาหลี", nameEn: "Korean", icon: "🍲" },
-  { slug: "chinese", nameTh: "อาหารจีน", nameEn: "Chinese", icon: "🥟" },
-  { slug: "italian", nameTh: "อาหารอิตาเลียน", nameEn: "Italian", icon: "🍝" },
-  { slug: "fast-food", nameTh: "ฟาสต์ฟู้ด", nameEn: "Fast Food", icon: "🍔" },
+  { slug: "thai", nameTh: "อาหารไทย", nameEn: "Thai", icon: "flame" },
+  { slug: "japanese", nameTh: "อาหารญี่ปุ่น", nameEn: "Japanese", icon: "fish" },
+  { slug: "korean", nameTh: "อาหารเกาหลี", nameEn: "Korean", icon: "soup" },
+  { slug: "chinese", nameTh: "อาหารจีน", nameEn: "Chinese", icon: "utensils" },
+  { slug: "italian", nameTh: "อาหารอิตาเลียน", nameEn: "Italian", icon: "pizza" },
+  { slug: "fast-food", nameTh: "ฟาสต์ฟู้ด", nameEn: "Fast Food", icon: "sandwich" },
 ];
 
 export interface BudgetOption {

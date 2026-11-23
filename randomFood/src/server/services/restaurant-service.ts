@@ -3,6 +3,10 @@ import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { SEED_MENUS } from "@/server/data/menu-catalog";
 import { searchPlacesNearby } from "@/server/adapters/google-places-adapter";
+import {
+  computeRestaurantRankScore,
+  evaluateMenuMatch,
+} from "@/server/services/matching-engine";
 import type { NearbyRestaurantsQuery } from "@/server/validators/restaurant";
 import type {
   NearbyRestaurantsResult,
@@ -251,37 +255,26 @@ function getSortPriceDesc(r: RestaurantDTO): number {
   return 0;
 }
 
-function computeRecommendedScore(r: RestaurantDTO, radiusKm: number): number {
-  let score = 0;
-
-  // Menu verification boost (Rule 3: VERIFIED strictly ranks higher than INFERRED)
-  if (r.menuMatch?.verificationStatus === "VERIFIED") {
-    score += 50;
-  } else if (r.menuMatch?.verificationStatus === "INFERRED") {
-    score += 20;
-  }
-
-  // Rating quality (0 - 25 pts)
-  const rating = getEffectiveRating(r);
-  score += (rating / 5) * 25;
-
-  // Proximity (0 - 20 pts)
-  const proximityRatio = Math.max(0, 1 - r.distanceKm / Math.max(radiusKm, 1));
-  score += proximityRatio * 20;
-
-  // Open now bonus (5 pts)
-  if (r.openingHours.isOpenNow === true) {
-    score += 5;
-  }
-
-  return score;
-}
-
 function applyFiltersAndSort(
   restaurants: RestaurantDTO[],
-  query: NearbyRestaurantsQuery
+  query: NearbyRestaurantsQuery,
+  resolvedMenu: ResolvedMenuContext | null
 ): RestaurantDTO[] {
-  const filtered = restaurants.filter((r) => {
+  const enriched = restaurants.map((r) => {
+    const menuMatch = evaluateMenuMatch(r, resolvedMenu);
+    const withMatch: RestaurantDTO = { ...r, menuMatch };
+    const rankingBreakdown = computeRestaurantRankScore(withMatch, {
+      radiusKm: query.radiusKm,
+      hasMenuQuery: Boolean(resolvedMenu),
+    });
+    return {
+      ...withMatch,
+      matchScore: rankingBreakdown.totalScore,
+      rankingBreakdown,
+    };
+  });
+
+  const filtered = enriched.filter((r) => {
     if (r.distanceKm > query.radiusKm) return false;
 
     if (query.minRating !== undefined) {
@@ -306,6 +299,12 @@ function applyFiltersAndSort(
       }
     }
 
+    if (resolvedMenu && query.verificationFilter === "VERIFIED_ONLY") {
+      if (r.menuMatch?.verificationStatus !== "VERIFIED") return false;
+    } else if (resolvedMenu && query.verificationFilter === "MATCHED_ONLY") {
+      if (!r.menuMatch) return false;
+    }
+
     return true;
   });
 
@@ -328,9 +327,7 @@ function applyFiltersAndSort(
         return getSortPriceDesc(b) - getSortPriceDesc(a);
       case "recommended":
       default: {
-        const diff =
-          computeRecommendedScore(b, query.radiusKm) -
-          computeRecommendedScore(a, query.radiusKm);
+        const diff = (b.matchScore ?? 0) - (a.matchScore ?? 0);
         if (diff !== 0) return diff;
         return a.distanceKm - b.distanceKm;
       }
@@ -382,8 +379,8 @@ export async function findNearbyRestaurants(
     }
   }
 
-  // 4. Filter and sort
-  const finalRestaurants = applyFiltersAndSort(merged, query);
+  // 4. Filter, score, and sort
+  const finalRestaurants = applyFiltersAndSort(merged, query, resolvedMenu);
 
   // 5. Determine transparent data origin
   let dataOrigin: RestaurantDataOrigin;
