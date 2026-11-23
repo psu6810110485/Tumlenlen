@@ -6,6 +6,8 @@ import {
   Compass,
   Dices,
   Heart,
+  Loader2,
+  LocateFixed,
   LogOut,
   Menu,
   User,
@@ -14,6 +16,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { useUserLocation } from "@/components/location/UserLocationProvider";
 
 const NAV_ITEMS = [
   { href: "/", label: "สุ่มอาหาร", icon: Dices },
@@ -32,6 +35,7 @@ export function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<AuthUserSummary | null>(null);
+  const { location, gpsLoading, gpsWatching, requestLiveGps } = useUserLocation();
 
   const loadUser = useCallback(async () => {
     try {
@@ -102,6 +106,38 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <button
+            type="button"
+            onClick={requestLiveGps}
+            title={
+              gpsWatching
+                ? `กำลังติดตามพิกัด GPS สด (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`
+                : "คลิกเพื่ออัปเดตพิกัด GPS ปัจจุบันของคุณ"
+            }
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+              gpsWatching
+                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                : "border-border-subtle bg-surface text-stone-600 hover:border-orange-300 hover:text-orange-700"
+            )}
+          >
+            {gpsLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-600" />
+            ) : (
+              <LocateFixed
+                className={cn(
+                  "h-3.5 w-3.5",
+                  gpsWatching ? "text-emerald-600" : "text-orange-600"
+                )}
+              />
+            )}
+            <span className="max-w-[130px] truncate">
+              {gpsWatching
+                ? `GPS: ${location.district ?? "สด"}`
+                : location.district || "เปิด GPS"}
+            </span>
+          </button>
+
           {user ? (
             <>
               <Link

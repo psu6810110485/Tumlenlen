@@ -179,21 +179,43 @@ async function queryPostgisNearbyRestaurants(
       return { restaurants: [], postgisUsed: true };
     }
 
-    // Load restaurant_menus mappings for the requested menu if available
+    // Load restaurant_menus mappings (both for requested menu and for category tags)
     const menuMatchByRestId = new Map<string, RestaurantDTO["menuMatch"]>();
-    if (resolvedMenu && !resolvedMenu.id.startsWith("menu-")) {
-      const mappings = await prisma.restaurantMenu.findMany({
-        where: {
-          restaurantId: { in: rows.map((r) => r.id) },
-          menuId: resolvedMenu.id,
-          isAvailable: true,
+    const categoriesByRestId = new Map<string, Set<string>>();
+
+    const allMappings = await prisma.restaurantMenu.findMany({
+      where: {
+        restaurantId: { in: rows.map((r) => r.id) },
+        isAvailable: true,
+      },
+      include: {
+        menu: {
+          select: {
+            id: true,
+            slug: true,
+            nameTh: true,
+            category: { select: { slug: true } },
+          },
         },
-      });
-      for (const m of mappings) {
+      },
+    });
+
+    for (const m of allMappings) {
+      let catSet = categoriesByRestId.get(m.restaurantId);
+      if (!catSet) {
+        catSet = new Set<string>();
+        categoriesByRestId.set(m.restaurantId, catSet);
+      }
+      catSet.add(m.menu.category.slug);
+
+      if (
+        resolvedMenu &&
+        (m.menuId === resolvedMenu.id || m.menu.slug === resolvedMenu.slug)
+      ) {
         menuMatchByRestId.set(m.restaurantId, {
-          menuId: resolvedMenu.id,
-          menuSlug: resolvedMenu.slug,
-          menuNameTh: resolvedMenu.nameTh,
+          menuId: m.menu.id,
+          menuSlug: m.menu.slug,
+          menuNameTh: m.menu.nameTh,
           verificationStatus: m.verificationStatus,
           evidenceSource: m.evidenceSource,
           matchedPrice: m.price,
@@ -226,7 +248,7 @@ async function queryPostgisNearbyRestaurants(
       appReviewCount: row.app_review_count,
       openingHours: parseOpeningHours(row.opening_hours),
       photoUrls: Array.isArray(row.photo_urls) ? row.photo_urls : [],
-      categories: [],
+      categories: Array.from(categoriesByRestId.get(row.id) ?? []),
       dataSource: row.data_source,
       isMockData: row.data_source === "MOCK",
       menuMatch: menuMatchByRestId.get(row.id) ?? null,
@@ -350,14 +372,26 @@ export async function findNearbyRestaurants(
   // 1. Try PostGIS ST_DWithin / ST_Distance query first
   const postgisResult = await queryPostgisNearbyRestaurants(query, resolvedMenu);
 
-  // 2. Query Places Adapter (Google Places Live API or Mock Dataset)
-  const adapterResult = await searchPlacesNearby({
-    latitude: query.lat,
-    longitude: query.lng,
-    radiusKm: query.radiusKm,
-    menu: resolvedMenu,
-    limit: query.limit,
-  });
+  // 2. Query Places Adapter:
+  //    - In "live" mode: always query Google Places API (New) to supplement PostGIS.
+  //    - In "mock" mode: use real PostGIS DB restaurants first; only fall back to MOCK_RESTAURANTS
+  //      when PostGIS is offline or has 0 restaurants in this area.
+  const shouldQueryAdapter =
+    env.effectiveExternalMode === "live" || postgisResult.restaurants.length === 0;
+
+  const adapterResult = shouldQueryAdapter
+    ? await searchPlacesNearby({
+        latitude: query.lat,
+        longitude: query.lng,
+        radiusKm: query.radiusKm,
+        menu: resolvedMenu,
+        limit: query.limit,
+      })
+    : {
+        restaurants: [] as RestaurantDTO[],
+        mode: env.effectiveExternalMode,
+        cacheHit: false,
+      };
 
   // 3. Merge deduplicating by googlePlaceId or id
   const seenKeys = new Set<string>();

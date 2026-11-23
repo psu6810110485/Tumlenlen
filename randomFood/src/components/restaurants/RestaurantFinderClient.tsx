@@ -19,6 +19,7 @@ import type { ExternalApiMode } from "@/lib/env";
 import type { SelectedLocation } from "@/lib/locations";
 import { cn } from "@/lib/cn";
 import { LocationPicker } from "@/components/location/LocationPicker";
+import { useUserLocation } from "@/components/location/UserLocationProvider";
 import { RestaurantCard } from "@/components/restaurants/RestaurantCard";
 import { RestaurantMapView } from "@/components/restaurants/RestaurantMapView";
 import { EmptyState, ErrorState } from "@/components/ui/StateViews";
@@ -53,6 +54,7 @@ interface NearbyApiResponse {
 
 interface RestaurantFinderClientProps {
   initialLocation: SelectedLocation;
+  hasExplicitLocationParams?: boolean;
   initialRadiusKm: DistanceKm;
   initialMenuId?: string;
   initialMenuSlug?: string;
@@ -106,6 +108,7 @@ function originLabel(origin: RestaurantDataOrigin | null): string {
 
 export function RestaurantFinderClient({
   initialLocation,
+  hasExplicitLocationParams = false,
   initialRadiusKm,
   initialMenuId,
   initialMenuSlug,
@@ -113,8 +116,41 @@ export function RestaurantFinderClient({
   externalApiMode,
   hasGoogleMapsKey,
 }: RestaurantFinderClientProps) {
-  const [location, setLocation] = useState<SelectedLocation>(initialLocation);
-  const [radiusKm, setRadiusKm] = useState<DistanceKm>(initialRadiusKm);
+  const {
+    location: liveUserLocation,
+    radiusKm: savedRadiusKm,
+    setLocation: setGlobalLocation,
+    setRadiusKm: setGlobalRadiusKm,
+  } = useUserLocation();
+
+  const [useContextLocation, setUseContextLocation] = useState<boolean>(
+    !hasExplicitLocationParams
+  );
+  const [localLocation, setLocalLocation] =
+    useState<SelectedLocation>(initialLocation);
+  const [localRadiusKm, setLocalRadiusKm] =
+    useState<DistanceKm>(initialRadiusKm);
+
+  const location = useContextLocation ? liveUserLocation : localLocation;
+  const radiusKm = useContextLocation ? savedRadiusKm : localRadiusKm;
+
+  const setLocation = useCallback(
+    (next: SelectedLocation) => {
+      setUseContextLocation(true);
+      setLocalLocation(next);
+      setGlobalLocation(next);
+    },
+    [setGlobalLocation]
+  );
+
+  const setRadiusKm = useCallback(
+    (km: DistanceKm) => {
+      setUseContextLocation(true);
+      setLocalRadiusKm(km);
+      setGlobalRadiusKm(km);
+    },
+    [setGlobalRadiusKm]
+  );
   const [menuId, setMenuId] = useState<string | undefined>(initialMenuId);
   const [menuSlug, setMenuSlug] = useState<string | undefined>(initialMenuSlug);
   const [menuName, setMenuName] = useState<string | undefined>(initialMenuName);
