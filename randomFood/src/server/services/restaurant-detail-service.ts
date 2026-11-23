@@ -1,4 +1,5 @@
 import type { PriceTier } from "@prisma/client";
+import { buildDeliveryLinks } from "@/lib/delivery-links";
 import { getServerEnv } from "@/lib/env";
 import { calculateDistanceKm } from "@/lib/geo";
 import { prisma } from "@/server/db";
@@ -6,52 +7,11 @@ import { SEED_MENUS } from "@/server/data/menu-catalog";
 import { MOCK_RESTAURANTS } from "@/server/data/mock-restaurants";
 import { getMockReviewsForRestaurant } from "@/server/services/review-service";
 import type {
-  RestaurantDeliveryLinkDTO,
   RestaurantDetailDTO,
   RestaurantOpeningHours,
 } from "@/server/types/restaurant";
 
-/**
- * Builds delivery links strictly obeying Rule 4:
- * - Uses verified direct URLs ONLY when stored on the restaurant record.
- * - Otherwise returns transparent Search Fallback links (never fake store URLs).
- */
-export function buildDeliveryLinks(
-  restaurantName: string,
-  verifiedGrabUrl?: string | null,
-  verifiedLineManUrl?: string | null
-): RestaurantDeliveryLinkDTO[] {
-  const cleanName = restaurantName.replace(/\s*\(Mock\)\s*/gi, "").trim();
-
-  return [
-    verifiedGrabUrl
-      ? {
-          provider: "GRABFOOD",
-          label: "สั่งผ่าน GrabFood",
-          url: verifiedGrabUrl,
-          isVerifiedDirectUrl: true,
-        }
-      : {
-          provider: "GRABFOOD",
-          label: "ค้นหาร้านบน GrabFood",
-          url: `https://food.grab.com/th/th/restaurants?search=${encodeURIComponent(cleanName)}`,
-          isVerifiedDirectUrl: false,
-        },
-    verifiedLineManUrl
-      ? {
-          provider: "LINEMAN",
-          label: "สั่งผ่าน LINE MAN",
-          url: verifiedLineManUrl,
-          isVerifiedDirectUrl: true,
-        }
-      : {
-          provider: "LINEMAN",
-          label: "ค้นหาร้านบน LINE MAN",
-          url: `https://www.wongnai.com/restaurants?q=${encodeURIComponent(cleanName)}`,
-          isVerifiedDirectUrl: false,
-        },
-  ];
-}
+export { buildDeliveryLinks };
 
 function derivePriceTier(
   priceLevel: number | null,
