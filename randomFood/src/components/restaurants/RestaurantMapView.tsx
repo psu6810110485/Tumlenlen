@@ -24,18 +24,49 @@ interface RestaurantMapViewProps {
   useLiveGoogleMaps: boolean;
 }
 
+interface GoogleMapInstance {
+  panTo: (latLng: { lat: number; lng: number }) => void;
+}
+
+interface GoogleMarkerInstance {
+  addListener: (event: string, cb: () => void) => void;
+  setMap: (map: unknown | null) => void;
+  setIcon: (icon: Record<string, unknown>) => void;
+  setZIndex: (zIndex: number) => void;
+}
+
+const PIN_SVG_PATH =
+  "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z";
+
+function buildMarkerIcon(
+  gmaps: NonNullable<NonNullable<Window["google"]>["maps"]>,
+  isSelected: boolean
+): Record<string, unknown> {
+  return {
+    path: PIN_SVG_PATH,
+    fillColor: isSelected ? "#ea580c" : "#292524",
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeWeight: isSelected ? 2.5 : 1.5,
+    scale: isSelected ? 1.95 : 1.45,
+    anchor: new gmaps.Point(12, 22),
+    labelOrigin: new gmaps.Point(12, 9.5),
+  };
+}
+
 declare global {
   interface Window {
     google?: {
       maps?: {
-        Map: new (el: HTMLElement, opts: Record<string, unknown>) => unknown;
-        Marker: new (opts: Record<string, unknown>) => {
-          addListener: (event: string, cb: () => void) => void;
-          setMap: (map: unknown | null) => void;
-        };
+        Map: new (
+          el: HTMLElement,
+          opts: Record<string, unknown>
+        ) => GoogleMapInstance;
+        Marker: new (opts: Record<string, unknown>) => GoogleMarkerInstance;
         Circle: new (opts: Record<string, unknown>) => {
           setMap: (map: unknown | null) => void;
         };
+        Point: new (x: number, y: number) => unknown;
         SymbolPath: { CIRCLE: unknown };
       };
     };
@@ -79,6 +110,11 @@ export function RestaurantMapView({
   useLiveGoogleMaps,
 }: RestaurantMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<GoogleMapInstance | null>(null);
+  const markersByIdRef = useRef<
+    Map<string, { marker: GoogleMarkerInstance; lat: number; lng: number }>
+  >(new Map());
+  const activeIdRef = useRef<string | null>(null);
   const [mapsLoadFailed, setMapsLoadFailed] = useState(false);
 
   const selectedRestaurant = useMemo(
@@ -86,6 +122,9 @@ export function RestaurantMapView({
       restaurants.find((r) => r.id === selectedId) ?? restaurants[0] ?? null,
     [restaurants, selectedId]
   );
+
+  const activeRestaurantId = selectedRestaurant?.id ?? null;
+  activeIdRef.current = activeRestaurantId;
 
   // Live Google Maps initialization (only when NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is configured in live mode)
   useEffect(() => {
@@ -95,6 +134,10 @@ export function RestaurantMapView({
 
     let cancelled = false;
     const overlays: Array<{ setMap: (m: unknown | null) => void }> = [];
+    const markersMap = new Map<
+      string,
+      { marker: GoogleMarkerInstance; lat: number; lng: number }
+    >();
 
     loadGoogleMapsScript(mapsKey)
       .then(() => {
@@ -118,6 +161,7 @@ export function RestaurantMapView({
           mapTypeControl: false,
           streetViewControl: false,
         });
+        mapInstanceRef.current = map;
 
         const circle = new gmaps.Circle({
           map,
@@ -135,6 +179,7 @@ export function RestaurantMapView({
           map,
           position: { lat: center.latitude, lng: center.longitude },
           title: "ตำแหน่งของคุณ",
+          zIndex: 500,
           icon: {
             path: gmaps.SymbolPath.CIRCLE,
             scale: 8,
@@ -147,10 +192,13 @@ export function RestaurantMapView({
         overlays.push(userMarker);
 
         restaurants.forEach((rest, index) => {
+          const isSelected = rest.id === activeIdRef.current;
           const marker = new gmaps.Marker({
             map,
             position: { lat: rest.latitude, lng: rest.longitude },
             title: rest.name,
+            zIndex: isSelected ? 999 : 10 + index,
+            icon: buildMarkerIcon(gmaps, isSelected),
             label: {
               text: String(index + 1),
               color: "#ffffff",
@@ -160,7 +208,14 @@ export function RestaurantMapView({
           });
           marker.addListener("click", () => onSelect(rest));
           overlays.push(marker);
+          markersMap.set(rest.id, {
+            marker,
+            lat: rest.latitude,
+            lng: rest.longitude,
+          });
         });
+
+        markersByIdRef.current = markersMap;
       })
       .catch(() => {
         if (!cancelled) setMapsLoadFailed(true);
@@ -169,8 +224,28 @@ export function RestaurantMapView({
     return () => {
       cancelled = true;
       overlays.forEach((o) => o.setMap(null));
+      markersMap.clear();
+      markersByIdRef.current = new Map();
+      mapInstanceRef.current = null;
     };
   }, [center, onSelect, restaurants, useLiveGoogleMaps]);
+
+  // Smoothly highlight the selected marker with a distinct color & size without reloading the map
+  useEffect(() => {
+    if (!useLiveGoogleMaps || !window.google?.maps) return;
+    const gmaps = window.google.maps;
+
+    let idx = 0;
+    markersByIdRef.current.forEach((entry, id) => {
+      const isSelected = id === activeRestaurantId;
+      entry.marker.setIcon(buildMarkerIcon(gmaps, isSelected));
+      entry.marker.setZIndex(isSelected ? 999 : 10 + idx);
+      if (isSelected && mapInstanceRef.current) {
+        mapInstanceRef.current.panTo({ lat: entry.lat, lng: entry.lng });
+      }
+      idx += 1;
+    });
+  }, [activeRestaurantId, useLiveGoogleMaps]);
 
   // Project coordinates onto a 0..100% radar canvas for fallback/mock map
   const plottedPins = useMemo(() => {
