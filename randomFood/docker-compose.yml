@@ -18,5 +18,23 @@ services:
       timeout: 5s
       retries: 10
 
+  web:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-roulette-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://food_roulette:food_roulette_dev@postgres:5432/food_roulette?schema=public
+
 volumes:
   food_roulette_pgdata:
