@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react";
+import { Loader2, Mail, ShieldCheck, User, UserPlus } from "lucide-react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -129,20 +130,15 @@ export function RegisterForm() {
           >
             รหัสผ่าน (อย่างน้อย 8 ตัวอักษร)
           </label>
-          <div className="relative mt-1.5">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-            <input
-              id="register-password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="อย่างน้อย 8 ตัวอักษร"
-              className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-9 pr-3 text-sm text-stone-900 focus:border-orange-500 focus:outline-none"
-            />
-          </div>
+          <PasswordInput
+            id="register-password"
+            value={password}
+            onChange={setPassword}
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="อย่างน้อย 8 ตัวอักษร"
+            className="mt-1.5"
+          />
         </div>
 
         <div>
@@ -152,20 +148,15 @@ export function RegisterForm() {
           >
             ยืนยันรหัสผ่าน
           </label>
-          <div className="relative mt-1.5">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-            <input
-              id="register-confirm-password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="กรอกรหัสผ่านอีกครั้ง"
-              className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-9 pr-3 text-sm text-stone-900 focus:border-orange-500 focus:outline-none"
-            />
-          </div>
+          <PasswordInput
+            id="register-confirm-password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="กรอกรหัสผ่านอีกครั้ง"
+            className="mt-1.5"
+          />
         </div>
       </div>
 

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, LogIn, Lock, Mail } from "lucide-react";
+import { Loader2, LogIn, Mail } from "lucide-react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -96,19 +97,14 @@ export function LoginForm({ redirectTo = "/profile" }: LoginFormProps) {
             ลืมรหัสผ่าน?
           </Link>
         </div>
-        <div className="relative mt-1.5">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-          <input
-            id="login-password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="กรอกรหัสผ่านของคุณ"
-            className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-9 pr-3 text-sm text-stone-900 focus:border-orange-500 focus:outline-none"
-          />
-        </div>
+        <PasswordInput
+          id="login-password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          placeholder="กรอกรหัสผ่านของคุณ"
+          className="mt-1.5"
+        />
       </div>
 
       <button

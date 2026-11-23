@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, KeyRound, Loader2, Lock } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { EmptyState, LoadingState } from "@/components/ui/StateViews";
 
 interface ResetPasswordFormProps {
@@ -161,20 +162,15 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         >
           รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)
         </label>
-        <div className="relative mt-1.5">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-          <input
-            id="reset-new-password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="กรอกรหัสผ่านใหม่"
-            className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-9 pr-3 text-sm text-stone-900 focus:border-orange-500 focus:outline-none"
-          />
-        </div>
+        <PasswordInput
+          id="reset-new-password"
+          value={newPassword}
+          onChange={setNewPassword}
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="กรอกรหัสผ่านใหม่"
+          className="mt-1.5"
+        />
       </div>
 
       <div>
@@ -184,20 +180,15 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         >
           ยืนยันรหัสผ่านใหม่
         </label>
-        <div className="relative mt-1.5">
-          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-          <input
-            id="reset-confirm-password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-            className="w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-9 pr-3 text-sm text-stone-900 focus:border-orange-500 focus:outline-none"
-          />
-        </div>
+        <PasswordInput
+          id="reset-confirm-password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
+          className="mt-1.5"
+        />
       </div>
 
       <button
