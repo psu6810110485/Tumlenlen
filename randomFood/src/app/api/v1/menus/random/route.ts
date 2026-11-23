@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/server/api-response";
+import { getCurrentSession } from "@/server/auth/session";
 import { randomizeMenu } from "@/server/services/menu-service";
 import { randomMenuRequestSchema } from "@/server/validators/menu";
 
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
     }
 
     const parsed = randomMenuRequestSchema.parse(body);
-    const result = await randomizeMenu(parsed);
+    const session = await getCurrentSession();
+    const result = await randomizeMenu(parsed, { userId: session?.userId ?? null });
 
     return apiSuccess(
       {
