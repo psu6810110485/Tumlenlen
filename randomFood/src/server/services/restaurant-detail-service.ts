@@ -3,6 +3,7 @@ import { buildDeliveryLinks } from "@/lib/delivery-links";
 import { getServerEnv } from "@/lib/env";
 import { calculateDistanceKm } from "@/lib/geo";
 import { prisma } from "@/server/db";
+import { fetchGooglePlaceDetail } from "@/server/adapters/google-places-adapter";
 import { SEED_MENUS } from "@/server/data/menu-catalog";
 import { MOCK_RESTAURANTS } from "@/server/data/mock-restaurants";
 import { getMockReviewsForRestaurant } from "@/server/services/review-service";
@@ -177,7 +178,31 @@ export async function getRestaurantDetail(
     }
   }
 
-  // 2. Mock Dataset lookup ONLY in mock mode
+  // 2. Live Google Places Detail lookup for any gplace-{placeId} not yet in PostgreSQL
+  if (googlePlaceId && env.effectiveExternalMode === "live") {
+    const livePlace = await fetchGooglePlaceDetail(googlePlaceId);
+    if (livePlace) {
+      const distanceKm =
+        options.userLat !== undefined && options.userLng !== undefined
+          ? calculateDistanceKm(
+              options.userLat,
+              options.userLng,
+              livePlace.latitude,
+              livePlace.longitude
+            )
+          : null;
+
+      return {
+        ...livePlace,
+        distanceKm,
+        matchedMenus: [],
+        appReviews: [],
+        deliveryLinks: buildDeliveryLinks(livePlace.name, null, null),
+      };
+    }
+  }
+
+  // 3. Mock Dataset lookup ONLY in mock mode
   if (env.effectiveExternalMode === "mock") {
     const mock = MOCK_RESTAURANTS.find((r) => r.id === id);
     if (!mock) return null;

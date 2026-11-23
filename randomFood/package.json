@@ -17,7 +17,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:sync-places": "tsx prisma/sync-google-places.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
