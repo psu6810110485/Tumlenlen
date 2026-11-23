@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   listCategories,
   listMenus,
@@ -7,6 +7,9 @@ import {
 import { randomMenuRequestSchema } from "@/server/validators/menu";
 
 describe("Phase 2 Menu & Randomizer Service", () => {
+  beforeEach(() => {
+    process.env.EXTERNAL_API_MODE = "mock";
+  });
   it("lists all 6 base categories with menu counts", async () => {
     const { categories } = await listCategories();
     expect(categories.length).toBeGreaterThanOrEqual(6);

@@ -10,6 +10,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:generate": "prisma generate",
@@ -32,6 +35,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.14.0",
     "@types/nodemailer": "^8.0.2",
