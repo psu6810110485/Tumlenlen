@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Dices, LocateFixed, MapPin, Sparkles, Wallet } from "lucide-react";
+import { Dices, MapPin, Sparkles, Wallet } from "lucide-react";
 import {
   BUDGET_OPTIONS,
-  DEFAULT_LOCATION_AREAS,
   DISTANCE_OPTIONS_KM,
   FOOD_CATEGORIES,
   MEAL_TYPE_OPTIONS,
   type DistanceKm,
 } from "@/lib/constants";
+import {
+  DEFAULT_SELECTED_LOCATION,
+  type SelectedLocation,
+} from "@/lib/locations";
+import { LocationPicker } from "@/components/location/LocationPicker";
 import { cn } from "@/lib/cn";
 
 export function DiscoveryForm() {
@@ -20,41 +24,13 @@ export function DiscoveryForm() {
   const [budget, setBudget] = useState<string>("ANY");
   const [mealType, setMealType] = useState<string>("ANY");
   const [distanceKm, setDistanceKm] = useState<DistanceKm>(5);
-  const [locationMode, setLocationMode] = useState<"area" | "gps">("area");
-  const [selectedAreaIndex, setSelectedAreaIndex] = useState<number>(0);
-  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<string | null>(null);
+  const [location, setLocation] = useState<SelectedLocation>(
+    DEFAULT_SELECTED_LOCATION
+  );
 
   function toggleCategory(slug: string) {
     setSelectedCategories((prev) =>
       prev.includes(slug) ? prev.filter((item) => item !== slug) : [...prev, slug]
-    );
-  }
-
-  function handleRequestGps() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGpsStatus("เบราว์เซอร์ไม่รองรับ GPS กรุณาเลือกจังหวัด/อำเภอแทน");
-      setLocationMode("area");
-      return;
-    }
-
-    setLocationMode("gps");
-    setGpsStatus("กำลังขอตำแหน่ง GPS จากอุปกรณ์ของคุณ...");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGpsCoords({
-          lat: Number(position.coords.latitude.toFixed(6)),
-          lng: Number(position.coords.longitude.toFixed(6)),
-        });
-        setGpsStatus("รับตำแหน่ง GPS เรียบร้อยแล้ว");
-      },
-      () => {
-        setGpsCoords(null);
-        setGpsStatus("ไม่ได้รับสิทธิ์เข้าถึง GPS — สลับไปใช้การเลือกจังหวัด/อำเภอให้อัตโนมัติ");
-        setLocationMode("area");
-      },
-      { enableHighAccuracy: false, timeout: 8000 }
     );
   }
 
@@ -68,17 +44,11 @@ export function DiscoveryForm() {
     params.set("budget", budget);
     params.set("mealType", mealType);
     params.set("radiusKm", String(distanceKm));
-
-    if (locationMode === "gps" && gpsCoords) {
-      params.set("lat", String(gpsCoords.lat));
-      params.set("lng", String(gpsCoords.lng));
-      params.set("locMode", "gps");
-    } else {
-      const area = DEFAULT_LOCATION_AREAS[selectedAreaIndex] ?? DEFAULT_LOCATION_AREAS[0];
-      params.set("lat", String(area.latitude));
-      params.set("lng", String(area.longitude));
-      params.set("area", `${area.district}, ${area.province}`);
-      params.set("locMode", "area");
+    params.set("lat", String(location.latitude));
+    params.set("lng", String(location.longitude));
+    params.set("locMode", location.mode);
+    if (location.mode === "area" && location.province && location.district) {
+      params.set("area", `${location.district}, ${location.province}`);
     }
 
     router.push(`/random?${params.toString()}`);
@@ -192,58 +162,11 @@ export function DiscoveryForm() {
             <MapPin className="h-4 w-4 text-orange-500" />
             4. ตำแหน่งของคุณ
           </label>
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={handleRequestGps}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors",
-                locationMode === "gps"
-                  ? "border-orange-500 bg-orange-50 text-orange-800"
-                  : "border-border-subtle text-stone-700 hover:bg-stone-50"
-              )}
-            >
-              <LocateFixed className="h-3.5 w-3.5" />
-              ใช้ GPS ปัจจุบัน
-            </button>
-            <button
-              type="button"
-              onClick={() => setLocationMode("area")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors",
-                locationMode === "area"
-                  ? "border-orange-500 bg-orange-50 text-orange-800"
-                  : "border-border-subtle text-stone-700 hover:bg-stone-50"
-              )}
-            >
-              เลือกจังหวัด / อำเภอ
-            </button>
-          </div>
-
-          {locationMode === "area" ? (
-            <select
-              aria-label="เลือกจังหวัดและอำเภอ"
-              value={selectedAreaIndex}
-              onChange={(e) => setSelectedAreaIndex(Number(e.target.value))}
-              className="mt-2.5 w-full rounded-xl border border-border-subtle bg-surface px-3 py-2.5 text-sm text-stone-800 focus:border-orange-500 focus:outline-none"
-            >
-              {DEFAULT_LOCATION_AREAS.map((area, idx) => (
-                <option key={`${area.province}-${area.district}`} value={idx}>
-                  {area.province} — {area.district}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div className="mt-2.5 rounded-xl border border-border-subtle bg-surface-muted/60 px-3 py-2.5 text-xs text-stone-700">
-              {gpsCoords
-                ? `พิกัด GPS: ${gpsCoords.lat}, ${gpsCoords.lng}`
-                : gpsStatus || "กำลังรอพิกัด GPS..."}
-            </div>
-          )}
-
-          {gpsStatus && locationMode === "area" && (
-            <p className="mt-1.5 text-[11px] text-amber-700">{gpsStatus}</p>
-          )}
+          <LocationPicker
+            value={location}
+            onChange={setLocation}
+            className="mt-3"
+          />
         </div>
 
         <div>
