@@ -408,3 +408,128 @@ export async function searchPlacesNearby(
     cacheHit: false,
   };
 }
+
+const PLACE_DETAIL_FIELD_MASK = [
+  "id",
+  "displayName",
+  "formattedAddress",
+  "location",
+  "rating",
+  "userRatingCount",
+  "priceLevel",
+  "currentOpeningHours",
+  "regularOpeningHours",
+  "photos",
+  "types",
+  "nationalPhoneNumber",
+].join(",");
+
+const PLACE_ID_REGEX = /^[A-Za-z0-9_-]{8,160}$/;
+
+/**
+ * Fetches full details for a single Google Place ID using Google Places API (New)
+ * in "live" mode, with short-term TTL caching and proxied storefront photos.
+ */
+export async function fetchGooglePlaceDetail(
+  placeId: string
+): Promise<RestaurantDTO | null> {
+  const env = getServerEnv();
+  if (env.effectiveExternalMode !== "live" || !env.hasGooglePlacesKey) {
+    return null;
+  }
+  if (!PLACE_ID_REGEX.test(placeId)) {
+    return null;
+  }
+
+  const cacheKey = `place-detail:live:${placeId}`;
+  const cached = placesCache.get(cacheKey) as RestaurantDTO | null;
+  if (cached) return cached;
+
+  const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(
+    placeId
+  )}?languageCode=th&regionCode=TH`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-Goog-Api-Key": env.GOOGLE_PLACES_API_KEY,
+        "X-Goog-FieldMask": PLACE_DETAIL_FIELD_MASK,
+      },
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new ExternalPlacesApiError(
+      `ไม่สามารถโหลดรายละเอียดร้านจาก Google Places API ได้: ${
+        err instanceof Error ? err.message : "Network error"
+      }`,
+      502
+    );
+  }
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new ExternalPlacesApiError(
+      `Google Places Detail API ตอบกลับสถานะผิดพลาด (${response.status})`,
+      502
+    );
+  }
+
+  const place = (await response.json()) as GooglePlaceApiItem;
+  const placeLat = place.location?.latitude;
+  const placeLng = place.location?.longitude;
+  if (placeLat === undefined || placeLng === undefined || !place.id) {
+    return null;
+  }
+
+  const price = mapGooglePriceLevel(place.priceLevel);
+  const hoursSource = place.currentOpeningHours ?? place.regularOpeningHours;
+  const weekdayText = hoursSource?.weekdayDescriptions ?? [];
+
+  const photoUrls = (place.photos ?? [])
+    .slice(0, 5)
+    .map((p) => p.name)
+    .filter((name): name is string => Boolean(name))
+    .map(
+      (name) =>
+        `/api/v1/places/photo?name=${encodeURIComponent(name)}&maxWidthPx=800`
+    );
+
+  const dto: RestaurantDTO = {
+    id: `gplace-${place.id}`,
+    googlePlaceId: place.id,
+    name: place.displayName?.text ?? "ร้านอาหารไม่ระบุชื่อ",
+    address: place.formattedAddress ?? "ไม่ระบุที่อยู่",
+    province: null,
+    district: null,
+    latitude: placeLat,
+    longitude: placeLng,
+    distanceKm: 0,
+    phone: place.nationalPhoneNumber ?? null,
+    priceLevel: price.priceLevel,
+    priceTier: price.priceTier,
+    estimatedMinPrice: price.minPrice,
+    estimatedMaxPrice: price.maxPrice,
+    googleRating: typeof place.rating === "number" ? place.rating : null,
+    googleReviewCount: place.userRatingCount ?? 0,
+    appRatingAvg: null,
+    appReviewCount: 0,
+    openingHours: {
+      isOpenNow: hoursSource?.openNow ?? null,
+      todayHours: extractTodayHours(weekdayText),
+      weekdayText,
+    },
+    photoUrls,
+    categories: inferCategoriesFromGoogleTypes(place.types),
+    dataSource: "GOOGLE_PLACES",
+    isMockData: false,
+    menuMatch: null,
+  };
+
+  placesCache.set(cacheKey, dto, env.PLACES_CACHE_TTL_SECONDS * 1000);
+  return dto;
+}
