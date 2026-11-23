@@ -8,26 +8,19 @@ import {
   DISTANCE_OPTIONS_KM,
   FOOD_CATEGORIES,
   MEAL_TYPE_OPTIONS,
-  type DistanceKm,
 } from "@/lib/constants";
-import {
-  DEFAULT_SELECTED_LOCATION,
-  type SelectedLocation,
-} from "@/lib/locations";
 import { LocationPicker } from "@/components/location/LocationPicker";
+import { useUserLocation } from "@/components/location/UserLocationProvider";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { cn } from "@/lib/cn";
 
 export function DiscoveryForm() {
   const router = useRouter();
+  const { location, radiusKm, setLocation, setRadiusKm } = useUserLocation();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [budget, setBudget] = useState<string>("ANY");
   const [mealType, setMealType] = useState<string>("ANY");
-  const [distanceKm, setDistanceKm] = useState<DistanceKm>(5);
-  const [location, setLocation] = useState<SelectedLocation>(
-    DEFAULT_SELECTED_LOCATION
-  );
 
   function toggleCategory(slug: string) {
     setSelectedCategories((prev) =>
@@ -44,7 +37,7 @@ export function DiscoveryForm() {
     }
     params.set("budget", budget);
     params.set("mealType", mealType);
-    params.set("radiusKm", String(distanceKm));
+    params.set("radiusKm", String(radiusKm));
     params.set("lat", String(location.latitude));
     params.set("lng", String(location.longitude));
     params.set("locMode", location.mode);
@@ -183,12 +176,12 @@ export function DiscoveryForm() {
           </label>
           <div className="mt-3 flex flex-wrap gap-2">
             {DISTANCE_OPTIONS_KM.map((km) => {
-              const active = distanceKm === km;
+              const active = radiusKm === km;
               return (
                 <button
                   key={km}
                   type="button"
-                  onClick={() => setDistanceKm(km)}
+                  onClick={() => setRadiusKm(km)}
                   className={cn(
                     "rounded-xl border px-3.5 py-2.5 text-xs font-semibold transition-all",
                     active
@@ -202,7 +195,7 @@ export function DiscoveryForm() {
             })}
           </div>
           <p className="mt-2 text-xs text-stone-500">
-            ระบบจะค้นหาร้านในรัศมี {distanceKm} กิโลเมตรด้วย PostGIS Spatial Query
+            ระบบจะค้นหาร้านในรัศมี {radiusKm} กิโลเมตรด้วย PostGIS Spatial Query
           </p>
         </div>
       </div>

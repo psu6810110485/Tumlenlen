@@ -77,6 +77,8 @@ export default async function RestaurantsPage({
   const publicConfig = getPublicConfig();
 
   const initialLocation = resolveInitialLocation(params);
+  const hasExplicitLocationParams =
+    typeof params.lat === "string" && typeof params.lng === "string";
   const initialRadiusKm = parseRadiusKm(
     typeof params.radiusKm === "string" ? params.radiusKm : undefined
   );
@@ -89,6 +91,7 @@ export default async function RestaurantsPage({
   return (
     <RestaurantFinderClient
       initialLocation={initialLocation}
+      hasExplicitLocationParams={hasExplicitLocationParams}
       initialRadiusKm={initialRadiusKm}
       initialMenuId={menuId}
       initialMenuSlug={menuSlug}
