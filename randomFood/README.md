@@ -70,5 +70,5 @@ npm run build         # ทดสอบ Production Build
 - [x] **Phase 2: Food Randomizer** — ฐานข้อมูลเมนู 30 รายการ 6 หมวดหมู่, REST API (`/api/v1/menus*`), หน้าสุ่มอาหารพร้อม Animation และระบบกันสุ่มซ้ำ
 - [x] **Phase 3: Restaurant Finder** — GPS + จังหวัด/อำเภอ, Google Places API (New) Adapter (Live/Mock + Short-term Cache + Photo Proxy), PostGIS Nearby Search (`GET /api/v1/restaurants/nearby`), List & Map View
 - [x] **Phase 4: Restaurant Matching** — จับคู่เมนูกับร้าน (`VERIFIED` vs `INFERRED`), Bayesian Ranking Algorithm (`matchScore` 0–100), ตัวกรองสถานะยืนยันเมนู, API `GET /api/v1/restaurants/[id]` และหน้า Restaurant Detail (`/restaurants/[id]`)
-- [ ] **Phase 5: Reviews & User System** — ระบบสมาชิก, รีวิว (แยกจาก Google), ร้านโปรด, ประวัติการสุ่ม, PDPA
+- [x] **Phase 5: Reviews & User System** — ระบบสมาชิก (scrypt + Signed HttpOnly Cookie), ความยินยอมและสิทธิการลบข้อมูล PDPA, รีวิวบนเว็บไซต์แยกจาก Google Places, ร้านโปรด และประวัติการสุ่ม (`/auth/*`, `/profile`, `/api/v1/auth/*`, `/api/v1/reviews*`, `/api/v1/favorites`, `/api/v1/history`)
 - [ ] **Phase 6: Delivery & Deployment** — GrabFood / LINE MAN Links, Caching, Security Audit, Production Deployment
