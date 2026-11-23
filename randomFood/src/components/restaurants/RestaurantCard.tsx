@@ -12,10 +12,12 @@ import {
   MapPin,
   Navigation,
   Phone,
+  ShoppingBag,
   Star,
   Store,
   Wallet,
 } from "lucide-react";
+import { buildDeliveryLinks } from "@/lib/delivery-links";
 import { buildGoogleMapsDirectionsUrl, formatDistanceTh } from "@/lib/geo";
 import { cn } from "@/lib/cn";
 import type { RestaurantDTO } from "@/server/types/restaurant";
@@ -47,6 +49,7 @@ export function RestaurantCard({
     restaurant.longitude,
     restaurant.name
   );
+  const deliveryLinks = buildDeliveryLinks(restaurant.name);
 
   return (
     <article
@@ -237,35 +240,57 @@ export function RestaurantCard({
           </div>
 
           {/* Action Row */}
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-border-subtle pt-3">
-            {onSelectOnMap && (
-              <button
-                type="button"
-                onClick={() => onSelectOnMap(restaurant)}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle pt-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {deliveryLinks.map((link) => (
+                <a
+                  key={link.provider}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={
+                    link.isVerifiedDirectUrl
+                      ? link.label
+                      : `${link.label} (หน้าค้นหา)`
+                  }
+                  className="inline-flex items-center gap-1 rounded-lg border border-border-subtle bg-surface-muted/60 px-2.5 py-1 text-[11px] font-medium text-stone-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
+                >
+                  <ShoppingBag className="h-3 w-3 text-orange-600" />
+                  {link.shortLabel}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {onSelectOnMap && (
+                <button
+                  type="button"
+                  onClick={() => onSelectOnMap(restaurant)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border-subtle bg-surface px-3 py-1.5 text-xs font-semibold text-stone-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  ดูบนแผนที่
+                </button>
+              )}
+
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-border-subtle bg-surface px-3 py-1.5 text-xs font-semibold text-stone-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
               >
-                <MapPin className="h-3.5 w-3.5" />
-                ดูบนแผนที่
-              </button>
-            )}
+                Google Maps
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
 
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border-subtle bg-surface px-3 py-1.5 text-xs font-semibold text-stone-700 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
-            >
-              Google Maps
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-
-            <Link
-              href={resolvedDetailHref}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700"
-            >
-              ดูรายละเอียดร้าน
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+              <Link
+                href={resolvedDetailHref}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-orange-700"
+              >
+                ดูรายละเอียดร้าน
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
