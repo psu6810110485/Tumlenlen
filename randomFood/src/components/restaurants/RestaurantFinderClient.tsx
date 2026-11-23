@@ -270,9 +270,42 @@ export function RestaurantFinderClient({
     return `/restaurants/${encodeURIComponent(restaurantId)}?${params.toString()}`;
   }
 
+  const switchViewMode = useCallback(
+    (nextMode: "list" | "map") => {
+      setViewMode(nextMode);
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+      if (nextMode === "map") {
+        if (url.searchParams.get("view") !== "map") {
+          url.searchParams.set("view", "map");
+          window.history.pushState({ frView: "map" }, "", url.toString());
+        }
+      } else if (url.searchParams.get("view") === "map") {
+        url.searchParams.delete("view");
+        window.history.replaceState({ frView: "list" }, "", url.toString());
+      }
+    },
+    []
+  );
+
+  // Sync browser Back/Forward buttons between Map View and List View
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      setViewMode(params.get("view") === "map" ? "map" : "list");
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
+
   function handleSelectOnMap(restaurant: RestaurantDTO) {
     setSelectedMapRestaurantId(restaurant.id);
-    setViewMode("map");
+    switchViewMode("map");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   const displayMenuName = resolvedMenu?.nameTh ?? menuName;
@@ -281,13 +314,24 @@ export function RestaurantFinderClient({
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       {/* Top Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={displayMenuName ? "/random" : "/"}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-orange-600"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {displayMenuName ? "กลับไปหน้าสุ่มอาหาร" : "กลับหน้าแรก"}
-        </Link>
+        {viewMode === "map" ? (
+          <button
+            type="button"
+            onClick={() => switchViewMode("list")}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-orange-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            กลับไปหน้ารายการร้านอาหาร
+          </button>
+        ) : (
+          <Link
+            href={displayMenuName ? "/random" : "/"}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-orange-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {displayMenuName ? "กลับไปหน้าสุ่มอาหาร" : "กลับหน้าแรก"}
+          </Link>
+        )}
 
         <button
           type="button"
@@ -327,7 +371,7 @@ export function RestaurantFinderClient({
         <div className="inline-flex self-start rounded-xl border border-border-subtle bg-surface p-1 shadow-sm sm:self-auto">
           <button
             type="button"
-            onClick={() => setViewMode("list")}
+            onClick={() => switchViewMode("list")}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors",
               viewMode === "list"
@@ -340,7 +384,7 @@ export function RestaurantFinderClient({
           </button>
           <button
             type="button"
-            onClick={() => setViewMode("map")}
+            onClick={() => switchViewMode("map")}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors",
               viewMode === "map"
