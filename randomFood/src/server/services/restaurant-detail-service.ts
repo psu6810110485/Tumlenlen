@@ -3,7 +3,10 @@ import { buildDeliveryLinks } from "@/lib/delivery-links";
 import { getServerEnv } from "@/lib/env";
 import { calculateDistanceKm } from "@/lib/geo";
 import { prisma } from "@/server/db";
-import { fetchGooglePlaceDetail } from "@/server/adapters/google-places-adapter";
+import {
+  buildStreetViewFallbackUrl,
+  fetchGooglePlaceDetail,
+} from "@/server/adapters/google-places-adapter";
 import { SEED_MENUS } from "@/server/data/menu-catalog";
 import { MOCK_RESTAURANTS } from "@/server/data/mock-restaurants";
 import { getMockReviewsForRestaurant } from "@/server/services/review-service";
@@ -144,7 +147,12 @@ export async function getRestaurantDetail(
           appRatingAvg: row.appRatingAvg,
           appReviewCount: row.appReviewCount,
           openingHours: parseOpeningHours(row.openingHours),
-          photoUrls: row.photoUrls,
+          photoUrls:
+            row.photoUrls.length > 0
+              ? row.photoUrls
+              : env.effectiveExternalMode === "live"
+                ? [buildStreetViewFallbackUrl(row.latitude, row.longitude)]
+                : [],
           categories: Array.from(new Set(matchedMenus.map((m) => m.categorySlug))),
           dataSource: row.dataSource,
           isMockData: row.dataSource === "MOCK",

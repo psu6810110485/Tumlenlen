@@ -125,6 +125,13 @@ function extractTodayHours(weekdayDescriptions?: string[]): string | null {
   return colonIdx >= 0 ? line.slice(colonIdx + 1).trim() : line;
 }
 
+export function buildStreetViewFallbackUrl(
+  latitude: number,
+  longitude: number
+): string {
+  return `/api/v1/places/streetview?lat=${latitude.toFixed(6)}&lng=${longitude.toFixed(6)}`;
+}
+
 function buildCacheKey(mode: ExternalApiMode, input: PlacesAdapterSearchInput): string {
   const latKey = input.latitude.toFixed(3);
   const lngKey = input.longitude.toFixed(3);
@@ -294,7 +301,7 @@ async function searchGooglePlacesLive(
     const weekdayText = hoursSource?.weekdayDescriptions ?? [];
 
     // Proxy photo references through our server route so GOOGLE_PLACES_API_KEY is never exposed to frontend
-    const photoUrls = (place.photos ?? [])
+    const placePhotos = (place.photos ?? [])
       .slice(0, 3)
       .map((p) => p.name)
       .filter((name): name is string => Boolean(name))
@@ -302,6 +309,10 @@ async function searchGooglePlacesLive(
         (name) =>
           `/api/v1/places/photo?name=${encodeURIComponent(name)}&maxWidthPx=800`
       );
+    const photoUrls =
+      placePhotos.length > 0
+        ? placePhotos
+        : [buildStreetViewFallbackUrl(placeLat, placeLng)];
 
     // If searched via text query for a specific menu, mark strictly as INFERRED (never VERIFIED without menu proof)
     let menuMatch: RestaurantDTO["menuMatch"] = null;
@@ -490,7 +501,7 @@ export async function fetchGooglePlaceDetail(
   const hoursSource = place.currentOpeningHours ?? place.regularOpeningHours;
   const weekdayText = hoursSource?.weekdayDescriptions ?? [];
 
-  const photoUrls = (place.photos ?? [])
+  const placePhotos = (place.photos ?? [])
     .slice(0, 5)
     .map((p) => p.name)
     .filter((name): name is string => Boolean(name))
@@ -498,6 +509,10 @@ export async function fetchGooglePlaceDetail(
       (name) =>
         `/api/v1/places/photo?name=${encodeURIComponent(name)}&maxWidthPx=800`
     );
+  const photoUrls =
+    placePhotos.length > 0
+      ? placePhotos
+      : [buildStreetViewFallbackUrl(placeLat, placeLng)];
 
   const dto: RestaurantDTO = {
     id: `gplace-${place.id}`,
