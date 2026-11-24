@@ -22,6 +22,7 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
+import { getIllustrativeRestaurantImage } from "@/lib/category-images";
 import { buildGoogleMapsDirectionsUrl, formatDistanceTh } from "@/lib/geo";
 import { cn } from "@/lib/cn";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
@@ -56,7 +57,8 @@ export function RestaurantDetailClient({
   backHref,
   highlightMenuSlug,
 }: RestaurantDetailClientProps) {
-  const [imgError, setImgError] = useState(false);
+  const [primaryFailed, setPrimaryFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
@@ -77,7 +79,18 @@ export function RestaurantDetailClient({
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [reviewNotice, setReviewNotice] = useState<string | null>(null);
 
-  const coverPhoto = restaurant.photoUrls[0] ?? null;
+  const primaryCover = restaurant.photoUrls[0] ?? null;
+  const illustrativeCover = getIllustrativeRestaurantImage({
+    restaurantName: restaurant.name,
+    menuSlug: highlightMenuSlug ?? restaurant.menuMatch?.menuSlug,
+    categories: restaurant.categories,
+  });
+  const usingIllustrative = !primaryCover || primaryFailed;
+  const coverPhoto = usingIllustrative
+    ? fallbackFailed
+      ? null
+      : illustrativeCover
+    : primaryCover;
   const mapsUrl = buildGoogleMapsDirectionsUrl(
     restaurant.latitude,
     restaurant.longitude,
@@ -278,12 +291,18 @@ export function RestaurantDetailClient({
       {/* Hero Cover Card */}
       <section className="mt-5 overflow-hidden rounded-3xl border border-border-subtle bg-surface shadow-sm">
         <div className="relative h-60 w-full overflow-hidden bg-gradient-to-br from-orange-100 to-amber-50 sm:h-80">
-          {coverPhoto && !imgError ? (
+          {coverPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={coverPhoto}
               alt={restaurant.name}
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (!usingIllustrative) {
+                  setPrimaryFailed(true);
+                } else {
+                  setFallbackFailed(true);
+                }
+              }}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -312,6 +331,11 @@ export function RestaurantDetailClient({
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-orange-700 shadow-sm">
                 <Navigation className="h-3.5 w-3.5" />
                 ห่าง {formatDistanceTh(restaurant.distanceKm)}
+              </span>
+            )}
+            {usingIllustrative && coverPhoto && (
+              <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-stone-100 backdrop-blur">
+                ภาพประกอบเมนู
               </span>
             )}
           </div>

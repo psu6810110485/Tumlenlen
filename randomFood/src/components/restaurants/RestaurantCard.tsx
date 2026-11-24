@@ -17,6 +17,7 @@ import {
   Store,
   Wallet,
 } from "lucide-react";
+import { getIllustrativeRestaurantImage } from "@/lib/category-images";
 import { buildDeliveryLinks } from "@/lib/delivery-links";
 import { buildGoogleMapsDirectionsUrl, formatDistanceTh } from "@/lib/geo";
 import { cn } from "@/lib/cn";
@@ -40,8 +41,22 @@ export function RestaurantCard({
   isSelected = false,
   onSelectOnMap,
 }: RestaurantCardProps) {
-  const [imgError, setImgError] = useState(false);
-  const photoUrl = restaurant.photoUrls[0] ?? null;
+  const [primaryFailed, setPrimaryFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+
+  const primaryPhotoUrl = restaurant.photoUrls[0] ?? null;
+  const illustrativePhotoUrl = getIllustrativeRestaurantImage({
+    restaurantName: restaurant.name,
+    menuSlug: restaurant.menuMatch?.menuSlug,
+    categories: restaurant.categories,
+  });
+
+  const usingIllustrative = !primaryPhotoUrl || primaryFailed;
+  const activePhotoUrl = usingIllustrative
+    ? fallbackFailed
+      ? null
+      : illustrativePhotoUrl
+    : primaryPhotoUrl;
   const resolvedDetailHref = detailHref || `/restaurants/${encodeURIComponent(restaurant.id)}`;
 
   const mapsUrl = buildGoogleMapsDirectionsUrl(
@@ -63,12 +78,18 @@ export function RestaurantCard({
       <div className="flex flex-col sm:flex-row">
         {/* Restaurant Photo */}
         <div className="relative h-44 w-full shrink-0 overflow-hidden bg-gradient-to-br from-orange-100 to-amber-50 sm:h-auto sm:w-52">
-          {photoUrl && !imgError ? (
+          {activePhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={photoUrl}
+              src={activePhotoUrl}
               alt={restaurant.name}
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (!usingIllustrative) {
+                  setPrimaryFailed(true);
+                } else {
+                  setFallbackFailed(true);
+                }
+              }}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
@@ -94,8 +115,8 @@ export function RestaurantCard({
             )}
           </div>
 
-          {/* Bottom Left: Data Source Transparency Badge */}
-          <div className="absolute bottom-2.5 left-2.5">
+          {/* Bottom Left: Data Source & Photo Transparency Badge */}
+          <div className="absolute bottom-2.5 left-2.5 flex flex-wrap gap-1">
             {restaurant.isMockData ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/95 px-2.5 py-0.5 text-[10px] font-semibold text-amber-900 shadow-sm">
                 <FlaskConical className="h-3 w-3" />
@@ -106,6 +127,11 @@ export function RestaurantCard({
                 {restaurant.dataSource === "GOOGLE_PLACES"
                   ? "Google Places"
                   : "ฐานข้อมูลระบบ"}
+              </span>
+            )}
+            {usingIllustrative && activePhotoUrl && (
+              <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-stone-100 backdrop-blur">
+                ภาพประกอบเมนู
               </span>
             )}
           </div>
