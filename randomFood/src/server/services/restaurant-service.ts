@@ -2,7 +2,10 @@ import type { DataSource, PriceTier } from "@prisma/client";
 import { getServerEnv } from "@/lib/env";
 import { prisma } from "@/server/db";
 import { SEED_MENUS } from "@/server/data/menu-catalog";
-import { searchPlacesNearby } from "@/server/adapters/google-places-adapter";
+import {
+  buildStreetViewFallbackUrl,
+  searchPlacesNearby,
+} from "@/server/adapters/google-places-adapter";
 import {
   computeRestaurantRankScore,
   evaluateMenuMatch,
@@ -223,36 +226,48 @@ async function queryPostgisNearbyRestaurants(
       }
     }
 
-    const mapped: RestaurantDTO[] = rows.map((row) => ({
-      id: row.id,
-      googlePlaceId: row.google_place_id,
-      name: row.name,
-      address: row.address,
-      province: row.province,
-      district: row.district,
-      latitude: row.latitude,
-      longitude: row.longitude,
-      distanceKm: Number((Number(row.distance_meters) / 1000).toFixed(2)),
-      phone: row.phone,
-      priceLevel: row.price_level,
-      priceTier: derivePriceTier(
-        row.price_level,
-        row.estimated_min_price,
-        row.estimated_max_price
-      ),
-      estimatedMinPrice: row.estimated_min_price,
-      estimatedMaxPrice: row.estimated_max_price,
-      googleRating: row.google_rating,
-      googleReviewCount: row.google_review_count,
-      appRatingAvg: row.app_rating_avg,
-      appReviewCount: row.app_review_count,
-      openingHours: parseOpeningHours(row.opening_hours),
-      photoUrls: Array.isArray(row.photo_urls) ? row.photo_urls : [],
-      categories: Array.from(categoriesByRestId.get(row.id) ?? []),
-      dataSource: row.data_source,
-      isMockData: row.data_source === "MOCK",
-      menuMatch: menuMatchByRestId.get(row.id) ?? null,
-    }));
+    const isLiveMode = getServerEnv().effectiveExternalMode === "live";
+
+    const mapped: RestaurantDTO[] = rows.map((row) => {
+      const dbPhotos = Array.isArray(row.photo_urls) ? row.photo_urls : [];
+      const photoUrls =
+        dbPhotos.length > 0
+          ? dbPhotos
+          : isLiveMode
+            ? [buildStreetViewFallbackUrl(row.latitude, row.longitude)]
+            : [];
+
+      return {
+        id: row.id,
+        googlePlaceId: row.google_place_id,
+        name: row.name,
+        address: row.address,
+        province: row.province,
+        district: row.district,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        distanceKm: Number((Number(row.distance_meters) / 1000).toFixed(2)),
+        phone: row.phone,
+        priceLevel: row.price_level,
+        priceTier: derivePriceTier(
+          row.price_level,
+          row.estimated_min_price,
+          row.estimated_max_price
+        ),
+        estimatedMinPrice: row.estimated_min_price,
+        estimatedMaxPrice: row.estimated_max_price,
+        googleRating: row.google_rating,
+        googleReviewCount: row.google_review_count,
+        appRatingAvg: row.app_rating_avg,
+        appReviewCount: row.app_review_count,
+        openingHours: parseOpeningHours(row.opening_hours),
+        photoUrls,
+        categories: Array.from(categoriesByRestId.get(row.id) ?? []),
+        dataSource: row.data_source,
+        isMockData: row.data_source === "MOCK",
+        menuMatch: menuMatchByRestId.get(row.id) ?? null,
+      };
+    });
 
     return { restaurants: mapped, postgisUsed: true };
   } catch {
